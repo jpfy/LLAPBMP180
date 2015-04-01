@@ -1,3 +1,2 @@
 # LLAPBMP180
-An attempt to do a home automation system initally using LLAP-Serial protocol with arduinos and raspberry pi.
-I am a beginer coder.  
+Code to use a BMP-180 sensor with CISECO's LLAPSerial Library as the first part of my home automation system.
