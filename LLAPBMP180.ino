@@ -155,7 +155,7 @@ void loop()
 			LLAP.sendMessage(F("ERROR"));
 		} else {
 			//Converts double to array then string then adds to T
-			dtostrf(T,7,2,TempString);
+			dtostrf(T,5,2,TempString);
 				String ST;
 			ST = "T" + String(TempString);
 			LLAP.sendMessage(ST);
