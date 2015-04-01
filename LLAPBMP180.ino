@@ -1,19 +1,37 @@
+/* LLAP180 by Phil Young 
+My attempt at using the BMP180 with the LLAP protocol
+Designed for use on the XinoRF and RFu-328 from Ciseco
+However should work with any Arduino 
 
+Uses the Ciseco LLAPSerial Library
+https://github.com/CisecoPlc/LLAPSerial
+Uses the SFE_BMP180 Library
+https://github.com/sparkfun/BMP180_Breakout
+Based on a mash up of the SFE_BMP180 example sketch and the 
+LLAP_DHT22 example sketch
+*/
+/*
 
-/* 
-Phils first version of LLAPBMP sensor with rfu368
-Using SFE_BMP180 library
+General instructions from SFE_BMP180 Example
+https://www.sparkfun.com/products/11824
 
-Current issues are:
-   1. Temp readings show .xx not xx.xx
-   2. Barometric readings show xx.xx not xxxx
-   3. LLAP not working properly
-   
-Impression is that varibles are currently in wrong class.
-That I am not showing propper LLAP info
+Like most pressure sensors, the BMP180 measures absolute pressure.
+This is the actual ambient pressure seen by the device, which will
+vary with both altitude and weather.
 
+Before taking a pressure reading you must take a temparture reading.
+This is done with startTemperature() and getTemperature().
+The result is in degrees C.
 
-SFE_BMP180 library example sketch
+Once you have a temperature reading, you can take a pressure reading.
+This is done with startPressure() and getPressure().
+The result is in millibar (mb) aka hectopascals (hPa).
+
+If you'll be monitoring weather patterns, you will probably want to
+remove the effects of altitude. This will produce readings that can
+be compared to the published pressure readings from other locations.
+To do this, use the sealevel() function. You will need to provide
+the known altitude at which the pressure was measured.
 
 If you want to measure altitude, you will need to know the pressure
 at a baseline altitude. This can be average sealevel pressure, or
@@ -72,52 +90,49 @@ void setup()
 	digitalWrite(4,LOW);	// ensure the radio is not sleeping
 	delay(1000);				// allow the radio to startup
 	LLAP.init(DEVICEID);
-  LLAP.sendMessage(F("STARTED"));
-// Initialize the sensor (it is important to get calibration values stored on the device).
+	LLAP.sendMessage(F("STARTED"));
+  // Initialize the sensor (it is important to get calibration values stored on the device).
 
   if (pressure.begin())
-  LLAP.sendMessage(F("WORKING"));
-//   Serial.println("BMP180 init success");
+	  LLAP.sendMessage(F("WORKING"));
   else
   {
     // Oops, something went wrong, this is usually a connection problem,
     // see the comments at the top of this sketch for the proper connections.
-LLAP.sendMessage(F("ERROR"));
-  //  Serial.println("BMP180 init fail\n\n");
+	  LLAP.sendMessage(F("ERROR"));
     while(1); // Pause forever.
   }
 }
 
 void loop()
 {
- 
   if (LLAP.bMsgReceived) {
 		Serial.print(F("msg:"));
-		Serial.println(LLAP.sMessage); 
+		Serial.println(LLAP.sMessage);
 		LLAP.bMsgReceived = false;	// if we do not clear the message flag then message processing will be blocked
 	}
 
   char status;
   double T,P,p0,a;
-
-  // Loop here getting pressure readings every 10 seconds.
+  char TempString[10]; //Array for conversion Double to String
+  char PressureArray[10]; //Array for conversion Double to String
 
   // If you want sea-level-compensated pressure, as used in weather reports,
   // you will need to know the altitude at which your measurements are taken.
   // We're using a constant called ALTITUDE in this sketch:
-  
+
  // Serial.println();
  // Serial.print("provided altitude: ");
  // Serial.print(ALTITUDE,0);
  // Serial.print(" meters, ");
  // Serial.print(ALTITUDE*3.28084,0);
  // Serial.println(" feet");
-  
+
   // If you want to measure altitude, and not pressure, you will instead need
   // to provide a known baseline pressure. This is shown at the end of the sketch.
 
   // You must first get a temperature measurement to perform a pressure reading.
-  
+
   // Start a temperature measurement:
   // If request is successful, the number of ms to wait is returned.
   // If request is unsuccessful, 0 is returned.
@@ -136,24 +151,15 @@ void loop()
     if (status != 0)
     {
       // Print out the measurement:
-      	/*	if (isnan(T) || isnan(P)) {
+      		if (isnan(T) || isnan(P)) {
 			LLAP.sendMessage(F("ERROR"));
 		} else {
-  */
-  LLAP.sendIntWithDP("Tmp",T,2);
-			//delay(100);
-		//	LLAP.sendIntWithDP("",t,1);
+			//Converts double to array then string then adds to T
+			dtostrf(T,7,2,TempString);
+				String ST;
+			ST = "T" + String(TempString);
+			LLAP.sendMessage(ST);
 		}
-      //Serial.print("temperature: ");
-      //Serial.print(T,2);
-      //Serial.print(" deg C, ");
-      //Serial.print((9.0/5.0)*T+32.0,2);
-      //Serial.println(" deg F");
-      
-      // Start a pressure measurement:
-      // The parameter is the oversampling setting, from 0 to 3 (highest res, longest wait).
-      // If request is successful, the number of ms to wait is returned.
-      // If request is unsuccessful, 0 is returned.
 
       status = pressure.startPressure(3);
       if (status != 0)
@@ -170,20 +176,15 @@ void loop()
         status = pressure.getPressure(P,T);
         if (status != 0)
         {
-        /*  if (isnan(T) || isnan(P)) {
+          if (isnan(T) || isnan(P)) {
 			LLAP.sendMessage(F("ERROR"));
 		} else {
-  */
-			LLAP.sendIntWithDP("Pre",P,2);
-			//delay(100);
-		//	LLAP.sendIntWithDP("",t,1);
+			//Convert double to string
+			dtostrf(P,7,2,PressureArray);
+			String Pres;
+			Pres = "P"+ String(PressureArray);
+			LLAP.sendMessage(Pres);
 		}
-          // Print out the measurement:
-          //Serial.print("absolute pressure: ");
-          //Serial.print(P,2);
-          //Serial.print(" mb, ");
-          //Serial.print(P*0.0295333727,2);
-          //Serial.println(" inHg");
 
           // The pressure sensor returns abolute pressure, which varies with altitude.
           // To remove the effects of altitude, use the sealevel function and your current altitude.
@@ -192,31 +193,23 @@ void loop()
           // Result: p0 = sea-level compensated pressure in mb
 
           p0 = pressure.sealevel(P,ALTITUDE); // we're at 1655 meters (Boulder, CO)
-         // Serial.print("relative (sea-level) pressure: ");
-         // Serial.print(p0,2);
-         // Serial.print(" mb, ");
-         // Serial.print(p0*0.0295333727,2);
-         // Serial.println(" inHg");
 
           // On the other hand, if you want to determine your altitude from the pressure reading,
           // use the altitude function along with a baseline pressure (sea-level or other).
           // Parameters: P = absolute pressure in mb, p0 = baseline pressure in mb.
           // Result: a = altitude in m.
 
-         a = pressure.altitude(P,p0);
-         // Serial.print("computed altitude: ");
-         // Serial.print(a,0);
-         // Serial.print(" meters, ");
-         // Serial.print(a*3.28084,0);
-         // Serial.println(" feet");
-//        }
-//        else Serial.println("error retrieving pressure measurement\n");
-//      }
-//      else Serial.println("error starting pressure measurement\n");
-//    }
-//    else Serial.println("error retrieving temperature measurement\n");
-//  }
-//  else Serial.println("error starting temperature measurement\n");
+         // a = pressure.altitude(P,p0);
+        }
+        //Need to change these error messages at some point
+        else Serial.println("error retrieving pressure measurement\n");
+      }
+      else Serial.println("error starting pressure measurement\n");
+    }
+    else Serial.println("error retrieving temperature measurement\n");
+  }
+  else Serial.println("error starting temperature measurement\n");
 
   delay(30000);  // Pause for 30 seconds.
-}}}
+}
+
