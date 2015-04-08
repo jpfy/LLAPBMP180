@@ -313,7 +313,7 @@ environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.
 environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.BOARD_NAME/value=Arduino Uno
 environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.COM_PORT/delimiter=\:
 environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.COM_PORT/operation=replace
-environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.COM_PORT/value=/dev/tty.usbmodem000001
+environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.COM_PORT/value=/dev/tty.SLAB_USBtoUART
 environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.EXTRA.C.COMPILE/delimiter=\:
 environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.EXTRA.C.COMPILE/operation=replace
 environment/project/it.baeyens.arduino.core.toolChain.release.1264523114/JANTJE.EXTRA.C.COMPILE/value=
